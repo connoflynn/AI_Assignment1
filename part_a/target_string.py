@@ -179,6 +179,6 @@ for i in range(50):
 df = pd.DataFrame(average_fitnesses)
 
 plt.plot(df["generation"], df["avg_fitness"])
+plt.xlabel("Generation")
+plt.ylabel("Average Fitness")
 plt.show()
-
-    

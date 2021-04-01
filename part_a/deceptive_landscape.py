@@ -1,3 +1,7 @@
+## The only difference between this script and one_max.py is the calc_fitness function
+##
+##
+
 import random
 import string
 import matplotlib.pyplot as plt
@@ -27,7 +31,11 @@ def generate_population(size, value_length, characters):
 
 #calculate the fitness of a value by counting the amout of times the character appears in the string
 def calc_fitness(value, character):
+    global target
+
     fitness = value.count(character)
+    if fitness == 0:
+        fitness = 2*(len(target))
     return fitness
 
 # given a list of population values and the fitness metric,

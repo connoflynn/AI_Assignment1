@@ -3,17 +3,29 @@ import string
 import matplotlib.pyplot as plt
 import pandas as pd
 
-target = "11111111111111111111"
+knapsack_size = 103
 
-population_size = 100
+values = [78, 35, 89, 36, 94, 75, 74, 79, 80, 16]
+weights = [18, 9, 23, 20, 59, 61, 70, 75, 76, 30]
+
+#initiate a list of dict items containing the value and weight of each item
+items = []
+for i in range(len(values)):
+    item = dict()
+    item["value"] = values[i]
+    item["weight"] = weights[i]
+    items.append(item)
+
+
+population_size = 50
 
 crossover_rate = 0.8
 
 mutation_rate = 0.1
 
-fitness_metric = "1"
-
 tournamentK = 3
+
+generations = 100
 
 #generate a random population of strings, using characters given, of length given
 def generate_population(size, value_length, characters):
@@ -25,18 +37,37 @@ def generate_population(size, value_length, characters):
 
     return population
 
-#calculate the fitness of a value by counting the amout of times the character appears in the string
-def calc_fitness(value, character):
-    fitness = value.count(character)
+# calculates the fitness of a value
+def calc_fitness(value):
+    global items, knapsack_size
+
+    total_value = 0
+    total_weight = 0 
+
+    #convert the string value into a list of characters
+    value_lst = [char for char in value]
+    #for each character in the value, if it equals 1, we add the corresponding weight and value to total 
+    for i in range(len(value_lst)):
+        if value_lst[i] == '1':
+            total_value += items[i]["value"]
+            total_weight += items[i]["weight"]
+    
+    #if the weight is greater than the knapsack size we give it a fitness score of 0
+    #else the fitness is the total value
+    if total_weight > knapsack_size:
+        fitness = 0
+    else:
+        fitness = total_value
+
     return fitness
 
 # given a list of population values and the fitness metric,
 # will calculate fitness for each value and return a list of dict items
-def create_population_dicts(population, fitness_metric):
+def create_population_dicts(population):
     population_fitness = []
     for item in population:
         value = dict()
-        fitness = calc_fitness(item, fitness_metric)
+        fitness = calc_fitness(item)
         value["value"] = item
         value["fitness"] = fitness
         population_fitness.append(value)
@@ -55,10 +86,12 @@ def get_average_fitness(population):
 # given the population, will return the highest fitness value
 def get_max_fitness(population):
     max_fitness = 0
+    value = None
     for item in population:
         if item["fitness"] > max_fitness:
             max_fitness = item["fitness"]
-    return max_fitness
+            value = item
+    return value
 
 #given a list of values, will return the value with the highest fitness
 def get_higher_fitness(values):
@@ -135,20 +168,22 @@ def remove_old_fitness(population):
 
 
 #create a random population
-target_length = len(target)
+target_length = len(items)
 character_pool = "01"
 population = generate_population(population_size, target_length, character_pool)
 
 #list to store average fitness for each generation
 average_fitnesses = []
+#list to store max fitness for each generation 
+max_fitnesses = []
 generation = 1
 
 #create a list of dicts for the population including fitness for each member
-population = create_population_dicts(population, fitness_metric)
+population = create_population_dicts(population)
 average_fitnesses.append({"generation":generation, "avg_fitness": get_average_fitness(population)})
+max_fitnesses.append({"generation":generation, "max_fitness": get_max_fitness(population)["fitness"], "value" : get_max_fitness(population)["value"]})
 
-#while get_max_fitness(population) < target_length:
-for i in range(50):
+for i in range(generations - 1):
     #perform selection
     population = selection(population)
     #perform crossover
@@ -158,17 +193,27 @@ for i in range(50):
     #remove old fitnesses from population
     population = remove_old_fitness(population)
     #calculate fitnesses for new population
-    population = create_population_dicts(population,fitness_metric)
+    population = create_population_dicts(population)
 
     generation +=1
     #append average fitness value to list
     average_fitnesses.append({"generation":generation, "avg_fitness": get_average_fitness(population)})
+    #append max fitness value to list
+    max_fitnesses.append({"generation":generation, "max_fitness": get_max_fitness(population)["fitness"], "value" : get_max_fitness(population)["value"]})
 
+#print best result found
+total_generations = max_fitnesses[len(max_fitnesses)-1]["generation"]
+best_value = max_fitnesses[len(max_fitnesses)-1]["value"]
+best_fitness = max_fitnesses[len(max_fitnesses)-1]["max_fitness"]
+print("After " + str(total_generations) + " generations, the best value found was: " + best_value + " with a score of: " + str(best_fitness))
 
 #plot average fitnesses
 df = pd.DataFrame(average_fitnesses)
+df2 = pd.DataFrame(max_fitnesses)
 
-plt.plot(df["generation"], df["avg_fitness"])
+plt.plot(df["generation"], df["avg_fitness"], label='Mean Fitness')
+plt.plot(df2["generation"], df2["max_fitness"],label='Max Fitness')
+plt.legend()
 plt.xlabel("Generation")
-plt.ylabel("Average Fitness")
+plt.ylabel("Fitness")
 plt.show()
