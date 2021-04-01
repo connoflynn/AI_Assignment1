@@ -3,15 +3,13 @@ import string
 import matplotlib.pyplot as plt
 import pandas as pd
 
-target = "11111111111111111111"
+target = "10110110110110010111"
 
 population_size = 100
 
 crossover_rate = 0.8
 
 mutation_rate = 0.1
-
-fitness_metric = "1"
 
 tournamentK = 3
 
@@ -25,18 +23,26 @@ def generate_population(size, value_length, characters):
 
     return population
 
-#calculate the fitness of a value by counting the amout of times the character appears in the string
-def calc_fitness(value, character):
-    fitness = value.count(character)
+#calculate the fitness of a value by using the hamming distance between the target and the value
+def calc_fitness(value):
+    global target
+    hamming_distance = 0
+    #for each character in the two term, check if they are equal
+    for x,(i,j) in enumerate(zip(target,value)):
+        if i!=j:
+            hamming_distance += 1
+    
+    fitness = len(target) - hamming_distance
+
     return fitness
 
 # given a list of population values and the fitness metric,
 # will calculate fitness for each value and return a list of dict items
-def create_population_dicts(population, fitness_metric):
+def create_population_dicts(population):
     population_fitness = []
     for item in population:
         value = dict()
-        fitness = calc_fitness(item, fitness_metric)
+        fitness = calc_fitness(item)
         value["value"] = item
         value["fitness"] = fitness
         population_fitness.append(value)
@@ -82,7 +88,7 @@ def selection(population):
     
     return new_population
 
-# perform crossover on some random values and 
+# perform crossover on some random values
 def crossover(population):
     global crossover_rate
 
@@ -144,7 +150,7 @@ average_fitnesses = []
 generation = 1
 
 #create a list of dicts for the population including fitness for each member
-population = create_population_dicts(population, fitness_metric)
+population = create_population_dicts(population)
 average_fitnesses.append({"generation":generation, "avg_fitness": get_average_fitness(population)})
 
 #while get_max_fitness(population) < target_length:
@@ -158,7 +164,7 @@ for i in range(50):
     #remove old fitnesses from population
     population = remove_old_fitness(population)
     #calculate fitnesses for new population
-    population = create_population_dicts(population,fitness_metric)
+    population = create_population_dicts(population)
 
     generation +=1
     #append average fitness value to list
