@@ -1,3 +1,7 @@
+## The only difference between this script and one_max.py is the calc_fitness function
+##
+##
+
 import random
 import string
 import matplotlib.pyplot as plt
